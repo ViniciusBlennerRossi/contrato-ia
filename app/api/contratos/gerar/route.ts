@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { checkCanGenerateContract } from '@/lib/dal'
-import { generateContract } from '@/lib/anthropic'
+import { generateContract } from '@/lib/gemini'
 import { buildPrompt } from '@/lib/contratos/prompts'
 import { getTipoById } from '@/lib/contratos/tipos'
 import { db } from '@/lib/db'
