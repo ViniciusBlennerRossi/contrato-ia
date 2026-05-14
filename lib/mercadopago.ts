@@ -36,12 +36,12 @@ export async function criarPreferenciaPagamentoAvulso(userId: string, userEmail:
       ],
       external_reference: `avulso-${userId}`,
       back_urls: {
-        success: `https://contratosia.v3app.com.br/dashboard?pagamento=sucesso`,
-        failure: `https://contratosia.v3app.com.br/assinatura?pagamento=falhou`,
-        pending: `https://contratosia.v3app.com.br/assinatura?pagamento=pendente`,
+        success: `https://contratoia.v3app.com.br/dashboard?pagamento=sucesso`,
+        failure: `https://contratoia.v3app.com.br/assinatura?pagamento=falhou`,
+        pending: `https://contratoia.v3app.com.br/assinatura?pagamento=pendente`,
       },
       auto_return: 'approved',
-      notification_url: `https://contratosia.v3app.com.br/api/pagamento/webhook`,
+      notification_url: `https://contratoia.v3app.com.br/api/pagamento/webhook`,
     },
   })
 
@@ -61,7 +61,7 @@ export async function criarPlanoAssinatura(plano: 'MENSAL' | 'PROFISSIONAL') {
         transaction_amount: dadosPlano.valor,
         currency_id: 'BRL',
       },
-      back_url: `https://contratosia.v3app.com.br/dashboard`,
+      back_url: `https://contratoia.v3app.com.br/dashboard`,
     } as Parameters<PreApprovalPlan['create']>[0]['body'],
   })
 
@@ -89,7 +89,7 @@ export async function criarAssinatura(
         currency_id: 'BRL',
       },
       external_reference: `${plano.toLowerCase()}-${userId}`,
-      back_url: `https://contratosia.v3app.com.br/dashboard?pagamento=sucesso`,
+      back_url: `https://contratoia.v3app.com.br/dashboard?pagamento=sucesso`,
     } as Parameters<PreApproval['create']>[0]['body'],
   })
 
