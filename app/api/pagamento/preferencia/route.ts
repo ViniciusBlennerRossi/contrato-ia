@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Plano inválido' }, { status: 400 })
   } catch (error) {
-    console.error('Erro ao criar pagamento:', error)
-    return NextResponse.json({ error: 'Falha ao processar pagamento' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : JSON.stringify(error)
+    console.error('Erro ao criar pagamento:', msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
