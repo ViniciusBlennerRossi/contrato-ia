@@ -1,10 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHmac } from 'crypto'
 import { db } from '@/lib/db'
 
+function validarAssinatura(req: NextRequest, rawBody: string): boolean {
+  const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET
+  if (!secret) return true
+
+  const xSignature = req.headers.get('x-signature') ?? ''
+  const xRequestId = req.headers.get('x-request-id') ?? ''
+  const dataId = new URL(req.url).searchParams.get('data.id') ?? ''
+
+  const manifest = `id:${dataId};request-id:${xRequestId};ts:${xSignature.split(',').find(p => p.startsWith('ts='))?.split('=')[1] ?? ''};`
+  const ts = xSignature.split(',').find(p => p.startsWith('ts='))?.split('=')[1] ?? ''
+  const v1 = xSignature.split(',').find(p => p.startsWith('v1='))?.split('=')[1] ?? ''
+
+  const template = `id:${dataId};request-id:${xRequestId};ts:${ts};`
+  const hash = createHmac('sha256', secret).update(template).digest('hex')
+
+  return hash === v1
+}
+
 export async function POST(request: NextRequest) {
+  const rawBody = await request.text()
+
+  if (!validarAssinatura(request, rawBody)) {
+    return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 })
+  }
+
   let body: Record<string, unknown>
   try {
-    body = await request.json()
+    body = JSON.parse(rawBody)
   } catch {
     return NextResponse.json({ ok: true })
   }
