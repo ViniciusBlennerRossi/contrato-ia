@@ -46,9 +46,11 @@ export default function AssinaturaPage() {
       const json = await res.json()
       if (json.checkoutUrl) {
         window.location.href = json.checkoutUrl
+      } else {
+        alert(`Erro: ${json.error ?? 'URL de checkout não retornada'}`)
       }
-    } catch {
-      alert('Erro ao processar pagamento. Tente novamente.')
+    } catch (err) {
+      alert(`Erro ao processar pagamento: ${err}`)
     } finally {
       setLoading(null)
     }
