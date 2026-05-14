@@ -37,12 +37,12 @@ export async function criarPreferenciaPagamentoAvulso(userId: string, userEmail:
       payer: { email: userEmail },
       external_reference: `avulso-${userId}`,
       back_urls: {
-        success: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?pagamento=sucesso`,
-        failure: `${process.env.NEXT_PUBLIC_APP_URL}/assinatura?pagamento=falhou`,
-        pending: `${process.env.NEXT_PUBLIC_APP_URL}/assinatura?pagamento=pendente`,
+        success: `https://contrato-ia-five.vercel.app/dashboard?pagamento=sucesso`,
+        failure: `https://contrato-ia-five.vercel.app/assinatura?pagamento=falhou`,
+        pending: `https://contrato-ia-five.vercel.app/assinatura?pagamento=pendente`,
       },
       auto_return: 'approved',
-      notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/pagamento/webhook`,
+      notification_url: `https://contrato-ia-five.vercel.app/api/pagamento/webhook`,
     },
   })
 
@@ -62,7 +62,7 @@ export async function criarPlanoAssinatura(plano: 'MENSAL' | 'PROFISSIONAL') {
         transaction_amount: dadosPlano.valor,
         currency_id: 'BRL',
       },
-      back_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+      back_url: `https://contrato-ia-five.vercel.app/dashboard`,
     } as Parameters<PreApprovalPlan['create']>[0]['body'],
   })
 
@@ -90,7 +90,7 @@ export async function criarAssinatura(
         currency_id: 'BRL',
       },
       external_reference: `${plano.toLowerCase()}-${userId}`,
-      back_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?pagamento=sucesso`,
+      back_url: `https://contrato-ia-five.vercel.app/dashboard?pagamento=sucesso`,
     } as Parameters<PreApproval['create']>[0]['body'],
   })
 
