@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { createSession, deleteSession } from '@/lib/session'
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
 const CadastroSchema = z.object({
   name: z.string().min(2, { message: 'Nome deve ter pelo menos 2 caracteres' }).trim(),
@@ -114,9 +114,16 @@ export async function solicitarRedefinicao(state: AuthState, formData: FormData)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://contratoia.v3app.com.br'
   const link = `${appUrl}/redefinir-senha?token=${token}`
 
-  const resend = new Resend(process.env.RESEND_API_KEY)
-  await resend.emails.send({
-    from: process.env.EMAIL_FROM ?? 'ContratoIA <noreply@contratoia.v3app.com.br>',
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  })
+
+  await transporter.sendMail({
+    from: `"ContratoIA" <${process.env.GMAIL_USER}>`,
     to: email,
     subject: 'Redefinição de senha — ContratoIA',
     html: `
