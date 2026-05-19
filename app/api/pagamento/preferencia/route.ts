@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   try {
     if (plano === 'AVULSO') {
       const preferencia = await criarPreferenciaPagamentoAvulso(session.userId, user.email)
-      return NextResponse.json({ checkoutUrl: preferencia.sandbox_init_point })
+      return NextResponse.json({ checkoutUrl: preferencia.init_point })
     }
 
     if (plano === 'MENSAL' || plano === 'PROFISSIONAL') {
