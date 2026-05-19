@@ -1,11 +1,15 @@
 'use client'
 
 import { useActionState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { login } from '@/app/actions/auth'
+import { Suspense } from 'react'
 
-export default function LoginPage() {
+function LoginForm() {
   const [state, action, pending] = useActionState(login, undefined)
+  const searchParams = useSearchParams()
+  const redefinido = searchParams.get('redefinido') === '1'
 
   return (
     <div className="min-h-screen bg-[#0e0e0e] flex items-center justify-center p-4">
@@ -25,6 +29,11 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8">
+          {redefinido && (
+            <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 text-sm">
+              Senha redefinida com sucesso! Faça login com sua nova senha.
+            </div>
+          )}
           {state?.message && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
               {state.message}
@@ -47,7 +56,12 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-300 mb-1.5">Senha</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm text-gray-300">Senha</label>
+                <Link href="/esqueci-senha" className="text-xs text-[#c9a84c] hover:underline">
+                  Esqueci minha senha
+                </Link>
+              </div>
               <input
                 name="password"
                 type="password"
@@ -95,5 +109,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   )
 }
