@@ -17,8 +17,16 @@ const CONTRATOS = [
   { emoji: '🏢', nome: 'Locação Comercial', desc: 'Escritório e espaços' },
   { emoji: '🛒', nome: 'Compra e Venda', desc: 'Produtos e imóveis' },
   { emoji: '📋', nome: 'Contrato de Trabalho', desc: 'Vínculo CLT simplificado' },
-  { emoji: '📱', nome: 'Influencer / Marketing Digital', desc: 'Criadores de conteúdo' },
-  { emoji: '💻', nome: 'Desenvolvimento de Software', desc: 'Devs e agências' },
+  { emoji: '🔄', nome: 'Permuta', desc: 'Troca de bens e serviços' },
+  { emoji: '📊', nome: 'Representação Comercial', desc: 'Representantes e distribuidores' },
+  { emoji: '📱', nome: 'Influencer / Marketing Digital', desc: 'Criadores de conteúdo e marcas' },
+  { emoji: '💻', nome: 'Desenvolvimento de Software', desc: 'Devs, agências e startups' },
+  { emoji: '🎨', nome: 'Cessão de Direitos Autorais', desc: 'Designers, fotógrafos, escritores' },
+  { emoji: '🎯', nome: 'Coaching / Mentoria', desc: 'Coaches e consultores' },
+  { emoji: '🏠', nome: 'Locação Residencial', desc: 'Proprietários e inquilinos' },
+  { emoji: '📦', nome: 'Comodato', desc: 'Empréstimo de bens e equipamentos' },
+  { emoji: '🔨', nome: 'Empreitada / Reforma', desc: 'Pedreiros e construtores' },
+  { emoji: '⚙️', nome: 'Licença de Software (SaaS)', desc: 'Empresas de software' },
 ]
 
 const DEPOIMENTOS = [
@@ -241,7 +249,7 @@ export default function LandingPage() {
             <span className="text-xs tracking-[3px] uppercase text-[#c8a84b]">Modelos Disponíveis</span>
           </div>
           <h2 className="font-[family-name:var(--font-cormorant)] text-4xl font-semibold mb-12">
-            16 tipos de contrato — e crescendo.
+            16 tipos de contrato disponíveis agora.
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {CONTRATOS.map(({ emoji, nome, desc }) => (
@@ -251,12 +259,6 @@ export default function LandingPage() {
                 <div className="text-xs text-gray-500">{desc}</div>
               </div>
             ))}
-            <div className="border border-[#2a2a2a] border-dashed p-4 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-2xl mb-1">🚀</div>
-                <div className="text-xs text-gray-500">+8 em breve</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
