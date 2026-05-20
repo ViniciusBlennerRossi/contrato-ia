@@ -62,10 +62,11 @@ export async function POST(request: NextRequest) {
       }
 
       case 'invoice.paid': {
-        const invoice = event.data.object as Stripe.Invoice
-        const subscriptionId = typeof invoice.subscription === 'string'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const invoice = event.data.object as any
+        const subscriptionId: string | undefined = typeof invoice.subscription === 'string'
           ? invoice.subscription
-          : invoice.subscription?.id
+          : invoice.subscription?.id ?? invoice.lines?.data?.[0]?.subscription
         if (!subscriptionId) break
 
         const sub = await db.subscription.findUnique({ where: { mpPreapprovalId: subscriptionId } })
@@ -97,8 +98,9 @@ export async function POST(request: NextRequest) {
       }
 
       case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice
-        const subscriptionId = typeof invoice.subscription === 'string'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const invoice = event.data.object as any
+        const subscriptionId: string | undefined = typeof invoice.subscription === 'string'
           ? invoice.subscription
           : invoice.subscription?.id
         if (!subscriptionId) break
