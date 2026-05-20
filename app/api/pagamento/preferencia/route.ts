@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         }
 
-    const checkoutSession = await (stripe.checkout.sessions.create as any)({
+    const checkoutSession = await stripe.checkout.sessions.create({
       mode: dadosPlano.modo,
       line_items: [lineItem],
       customer_email: user.email,
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         userId: session.userId,
         plano,
       },
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ['card'],
       success_url: `${APP_URL}/dashboard?pagamento=sucesso`,
       cancel_url: `${APP_URL}/assinatura?pagamento=cancelado`,
     })
