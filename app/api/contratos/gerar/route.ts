@@ -65,6 +65,13 @@ export async function POST(request: NextRequest) {
     const conteudo = await generateContract(prompt)
 
     const titulo = `${tipo.nome} — ${body.contratante} × ${body.contratado}`
+
+    // Re-verifica o limite antes de salvar (proteção contra race condition)
+    const { canGenerate: aindaPode } = await checkCanGenerateContract(session.userId, session.plan)
+    if (!aindaPode) {
+      return NextResponse.json({ error: 'Limite do plano atingido', reason: 'limit_reached' }, { status: 402 })
+    }
+
     const contrato = await db.contract.create({
       data: {
         userId: session.userId,
