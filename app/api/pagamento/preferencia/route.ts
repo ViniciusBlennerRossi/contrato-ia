@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         userId: session.userId,
         plano,
       },
-      payment_method_types: ['card', 'boleto', 'pix'],
+      automatic_payment_methods: { enabled: true },
       success_url: `${APP_URL}/dashboard?pagamento=sucesso`,
       cancel_url: `${APP_URL}/assinatura?pagamento=cancelado`,
     })
