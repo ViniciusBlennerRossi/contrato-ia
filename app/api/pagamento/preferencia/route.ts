@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         }
 
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const checkoutSession = await (stripe.checkout.sessions.create as any)({
       mode: dadosPlano.modo,
       line_items: [lineItem],
       customer_email: user.email,
