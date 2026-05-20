@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
-import { criarPreferenciaPagamentoAvulso, criarPlanoAssinatura } from '@/lib/mercadopago'
+import { stripe, PLANOS_STRIPE } from '@/lib/stripe'
+
+const APP_URL = 'https://contratoia.v3app.com.br'
 
 export async function POST(request: NextRequest) {
   const session = await getSession()
@@ -10,6 +12,10 @@ export async function POST(request: NextRequest) {
   }
 
   const { plano } = await request.json()
+
+  if (!['AVULSO', 'MENSAL', 'PROFISSIONAL'].includes(plano)) {
+    return NextResponse.json({ error: 'Plano inválido' }, { status: 400 })
+  }
 
   const user = await db.user.findUnique({
     where: { id: session.userId },
@@ -20,21 +26,45 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
   }
 
+  const dadosPlano = PLANOS_STRIPE[plano as keyof typeof PLANOS_STRIPE]
+
   try {
-    if (plano === 'AVULSO') {
-      const preferencia = await criarPreferenciaPagamentoAvulso(session.userId, user.email)
-      return NextResponse.json({ checkoutUrl: preferencia.init_point })
-    }
+    const lineItem = dadosPlano.modo === 'subscription'
+      ? {
+          price_data: {
+            currency: 'brl',
+            product_data: { name: dadosPlano.nome },
+            recurring: { interval: 'month' as const },
+            unit_amount: dadosPlano.valor,
+          },
+          quantity: 1,
+        }
+      : {
+          price_data: {
+            currency: 'brl',
+            product_data: { name: dadosPlano.nome },
+            unit_amount: dadosPlano.valor,
+          },
+          quantity: 1,
+        }
 
-    if (plano === 'MENSAL' || plano === 'PROFISSIONAL') {
-      const planoCriado = await criarPlanoAssinatura(plano)
-      return NextResponse.json({ planId: planoCriado.id, checkoutUrl: planoCriado.init_point })
-    }
+    const checkoutSession = await stripe.checkout.sessions.create({
+      mode: dadosPlano.modo,
+      line_items: [lineItem],
+      customer_email: user.email,
+      metadata: {
+        userId: session.userId,
+        plano,
+      },
+      payment_method_types: ['card', 'boleto', 'pix'],
+      success_url: `${APP_URL}/dashboard?pagamento=sucesso`,
+      cancel_url: `${APP_URL}/assinatura?pagamento=cancelado`,
+    })
 
-    return NextResponse.json({ error: 'Plano inválido' }, { status: 400 })
+    return NextResponse.json({ checkoutUrl: checkoutSession.url })
   } catch (error) {
     const msg = error instanceof Error ? error.message : JSON.stringify(error)
-    console.error('Erro ao criar pagamento:', msg)
+    console.error('Erro ao criar sessão Stripe:', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
