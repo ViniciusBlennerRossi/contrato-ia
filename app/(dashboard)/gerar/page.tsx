@@ -262,7 +262,7 @@ export default function GerarPage() {
             <div className="flex items-center justify-between p-4 border-b border-[#d4c9b8] bg-[#f9f6f0]">
               <div>
                 <h2 className="font-semibold text-[#0e0e0e] text-sm">{contrato.titulo}</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Contrato gerado com IA • Pronto para uso</p>
+                <p className="text-xs text-gray-500 mt-0.5">Contrato gerado com IA • Clique no texto para editar</p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -279,10 +279,13 @@ export default function GerarPage() {
                 </button>
               </div>
             </div>
-            <div className="p-6">
-              <pre className="whitespace-pre-wrap font-serif text-sm text-[#0e0e0e] leading-relaxed">
-                {contrato.conteudo}
-              </pre>
+            <div className="p-2">
+              <textarea
+                value={contrato.conteudo}
+                onChange={(e) => setContrato({ ...contrato, conteudo: e.target.value })}
+                className="w-full min-h-[600px] p-4 font-serif text-sm text-[#0e0e0e] leading-relaxed border-0 outline-none resize-y bg-white"
+                spellCheck={false}
+              />
             </div>
           </div>
 
