@@ -37,6 +37,11 @@ export async function criarPreferenciaPagamentoAvulso(userId: string, userEmail:
       payer: {
         email: userEmail,
       },
+      payment_methods: {
+        excluded_payment_types: [],
+        installments: 12,
+        default_installments: 1,
+      },
       external_reference: `avulso-${userId}`,
       back_urls: {
         success: `https://contratoia.v3app.com.br/dashboard?pagamento=sucesso`,
