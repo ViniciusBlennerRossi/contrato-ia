@@ -49,7 +49,7 @@ export function getPlanLimit(plan: string): number {
 export async function checkCanGenerateContract(userId: string, _sessionPlan: string) {
   const user = await db.user.findUnique({
     where: { id: userId },
-    select: { plan: true, contractsUsed: true, periodResetAt: true },
+    select: { plan: true, contractsUsed: true, bonusContracts: true, periodResetAt: true },
   })
 
   if (!user) return { canGenerate: false, reason: 'no_user' }
@@ -57,7 +57,9 @@ export async function checkCanGenerateContract(userId: string, _sessionPlan: str
   const plan = user.plan
   const limit = getPlanLimit(plan)
   if (limit === Infinity) return { canGenerate: true }
-  if (limit === 0) return { canGenerate: false, reason: 'no_plan' }
+
+  const totalLimit = limit + (user.bonusContracts ?? 0)
+  if (totalLimit === 0) return { canGenerate: false, reason: 'no_plan' }
 
   if (plan === 'MENSAL' && user.periodResetAt && new Date() > user.periodResetAt) {
     await db.user.update({
@@ -70,7 +72,7 @@ export async function checkCanGenerateContract(userId: string, _sessionPlan: str
     return { canGenerate: true }
   }
 
-  if (user.contractsUsed >= limit) {
+  if (user.contractsUsed >= totalLimit) {
     return { canGenerate: false, reason: 'limit_reached' }
   }
 
