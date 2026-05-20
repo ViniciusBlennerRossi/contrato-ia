@@ -30,15 +30,15 @@ const CONTRATOS = [
 ]
 
 const DEPOIMENTOS = [
-  { nome: 'Rafael S.', cargo: 'Designer Freelancer', texto: 'Economizei R$600 que pagaria num advogado. Em 30 segundos tinha meu contrato de cessão de direitos. Impressionante.', estrelas: 5 },
-  { nome: 'Ana L.', cargo: 'Consultora de Marketing', texto: 'Uso todo mês para meus clientes. O plano mensal se pagou no primeiro contrato. Linguagem jurídica perfeita.', estrelas: 5 },
-  { nome: 'Carlos M.', cargo: 'Desenvolvedor', texto: 'Finalmente consigo me proteger em projetos sem pagar R$400 por contrato. É o que faltava para freelancers.', estrelas: 5 },
+  { nome: 'Rafael S.', cargo: 'Designer Freelancer', texto: 'Em 30 segundos tinha meu modelo de cessão de direitos pronto. Economizei tempo e dinheiro. Impressionante.', estrelas: 5 },
+  { nome: 'Ana L.', cargo: 'Consultora de Marketing', texto: 'Uso todo mês para meus clientes. O plano mensal se pagou no primeiro contrato. Linguagem clara e profissional.', estrelas: 5 },
+  { nome: 'Carlos M.', cargo: 'Desenvolvedor', texto: 'Finalmente consigo documentar meus projetos sem burocracia. É o que faltava para freelancers como eu.', estrelas: 5 },
 ]
 
 const FAQS = [
   {
-    p: 'Os contratos gerados são válidos juridicamente?',
-    r: 'Sim. Os contratos são gerados com linguagem jurídica brasileira, seguindo o Código Civil e legislações pertinentes. São prontos para assinar. Para situações complexas, recomendamos revisão de um advogado.',
+    p: 'Os modelos gerados têm validade jurídica?',
+    r: 'Os modelos são elaborados com linguagem jurídica brasileira, baseados no Código Civil e legislações pertinentes, para fins de uso geral. Por se tratarem de modelos genéricos, recomendamos revisão por advogado habilitado antes do uso em situações com valores relevantes, riscos patrimoniais ou cláusulas complexas.',
   },
   {
     p: 'Posso editar o contrato depois de gerado?',
@@ -99,7 +99,7 @@ export default function LandingPage() {
         <div className="relative max-w-5xl mx-auto w-full">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-px bg-[#c8a84b]" />
-            <span className="text-xs tracking-[3px] uppercase text-[#c8a84b]">IA Jurídica Brasileira</span>
+            <span className="text-xs tracking-[3px] uppercase text-[#c8a84b]">Modelos Jurídicos com IA</span>
           </div>
 
           <h1 className="font-[family-name:var(--font-cormorant)] text-5xl md:text-7xl lg:text-8xl font-semibold leading-tight mb-6">
@@ -109,8 +109,8 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-gray-400 text-lg md:text-xl max-w-2xl mb-10 leading-relaxed">
-            Gere contratos profissionais com IA para MEIs, freelancers e pequenas empresas.
-            A partir de <strong className="text-white">R$29</strong> — sem advogado, sem espera.
+            Gere modelos de contratos com IA para MEIs, freelancers e pequenas empresas.
+            A partir de <strong className="text-white">R$29</strong> — rápido, prático, sem burocracia.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
@@ -212,6 +212,10 @@ export default function LandingPage() {
               </tbody>
             </table>
           </div>
+          <p className="text-center text-xs text-gray-600 mt-6">
+            * ContratoIA oferece modelos genéricos de documentos. Não substitui consultoria jurídica personalizada.{' '}
+            <Link href="/aviso-legal" className="underline hover:text-gray-400 transition-colors">Saiba mais</Link>
+          </p>
         </div>
       </section>
 
@@ -390,6 +394,7 @@ export default function LandingPage() {
         <div className="flex gap-4 text-xs text-gray-500">
           <Link href="/termos" className="hover:text-white transition-colors">Termos</Link>
           <Link href="/privacidade" className="hover:text-white transition-colors">Privacidade</Link>
+          <Link href="/aviso-legal" className="hover:text-white transition-colors">Aviso Legal</Link>
         </div>
       </footer>
 
