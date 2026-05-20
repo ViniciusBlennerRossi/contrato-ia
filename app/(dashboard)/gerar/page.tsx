@@ -125,7 +125,7 @@ export default function GerarPage() {
                   name="contratante"
                   required
                   placeholder="Nome ou empresa"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
                 />
               </div>
               <div>
@@ -134,7 +134,7 @@ export default function GerarPage() {
                   name="cpfCnpjContratante"
                   required
                   placeholder="000.000.000-00 ou 00.000.000/0001-00"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
                 />
               </div>
               <div>
@@ -145,7 +145,7 @@ export default function GerarPage() {
                   name="contratado"
                   required
                   placeholder="Nome ou empresa"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
                 />
               </div>
               <div>
@@ -154,7 +154,7 @@ export default function GerarPage() {
                   name="cpfCnpjContratado"
                   required
                   placeholder="000.000.000-00 ou 00.000.000/0001-00"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
                 />
               </div>
             </div>
@@ -168,7 +168,7 @@ export default function GerarPage() {
                 <input
                   name="valor"
                   placeholder="Ex: 5.000,00"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
                 />
               </div>
               <div>
@@ -176,7 +176,7 @@ export default function GerarPage() {
                 <input
                   name="duracao"
                   placeholder="Ex: 6 meses, 12 meses, indeterminado"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
                 />
               </div>
               <div>
@@ -184,7 +184,7 @@ export default function GerarPage() {
                 <input
                   name="cidade"
                   placeholder="São Paulo"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
                 />
               </div>
               <div>
@@ -193,7 +193,7 @@ export default function GerarPage() {
                   name="estado"
                   placeholder="SP"
                   maxLength={2}
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
                 />
               </div>
               <div className="sm:col-span-2">
@@ -219,7 +219,7 @@ export default function GerarPage() {
                 required
                 rows={4}
                 placeholder="Descreva detalhadamente o que será contratado, entregue ou realizado..."
-                className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors resize-y"
+                className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors resize-y"
               />
             </div>
           </div>
