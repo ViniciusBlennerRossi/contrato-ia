@@ -65,8 +65,8 @@ export default function TermosPage() {
               Solicitações de reembolso podem ser feitas em até <strong className="text-white">7 dias corridos</strong> após
               a compra, conforme o Código de Defesa do Consumidor (Art. 49, Lei 8.078/1990), desde que
               o serviço não tenha sido utilizado. Entre em contato pelo e-mail{' '}
-              <a href="mailto:suporte@v3app.com.br" className="text-[#c9a84c] hover:underline">
-                suporte@v3app.com.br
+              <a href="mailto:empresa.v3app@gmail.com" className="text-[#c9a84c] hover:underline">
+                empresa.v3app@gmail.com
               </a>
               .
             </p>
@@ -119,8 +119,8 @@ export default function TermosPage() {
             <h2 className="text-xl font-semibold text-white mb-3">11. Contato</h2>
             <p>
               Dúvidas:{' '}
-              <a href="mailto:suporte@v3app.com.br" className="text-[#c9a84c] hover:underline">
-                suporte@v3app.com.br
+              <a href="mailto:empresa.v3app@gmail.com" className="text-[#c9a84c] hover:underline">
+                empresa.v3app@gmail.com
               </a>
             </p>
           </section>

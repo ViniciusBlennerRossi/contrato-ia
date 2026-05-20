@@ -95,8 +95,8 @@ export default function PrivacidadePage() {
             </ul>
             <p className="mt-3">
               Para exercer seus direitos, entre em contato:{' '}
-              <a href="mailto:privacidade@v3app.com.br" className="text-[#c9a84c] hover:underline">
-                privacidade@v3app.com.br
+              <a href="mailto:empresa.v3app@gmail.com" className="text-[#c9a84c] hover:underline">
+                empresa.v3app@gmail.com
               </a>
             </p>
           </section>
@@ -121,8 +121,8 @@ export default function PrivacidadePage() {
             <h2 className="text-xl font-semibold text-white mb-3">10. Contato</h2>
             <p>
               Dúvidas sobre privacidade:{' '}
-              <a href="mailto:privacidade@v3app.com.br" className="text-[#c9a84c] hover:underline">
-                privacidade@v3app.com.br
+              <a href="mailto:empresa.v3app@gmail.com" className="text-[#c9a84c] hover:underline">
+                empresa.v3app@gmail.com
               </a>
             </p>
           </section>
