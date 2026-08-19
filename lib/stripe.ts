@@ -16,23 +16,3 @@ export function getStripe(): Stripe {
   }
   return cliente
 }
-
-export const PLANOS_STRIPE = {
-  AVULSO: {
-    nome: 'ContratoIA — Contrato Avulso',
-    valor: 2900,
-    modo: 'payment' as const,
-  },
-  MENSAL: {
-    nome: 'ContratoIA Mensal',
-    descricao: '10 contratos por mês',
-    valor: 4700,
-    modo: 'subscription' as const,
-  },
-  PROFISSIONAL: {
-    nome: 'ContratoIA Profissional',
-    descricao: 'Contratos ilimitados + suporte WhatsApp',
-    valor: 19700,
-    modo: 'subscription' as const,
-  },
-}

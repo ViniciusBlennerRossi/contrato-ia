@@ -1,32 +1,10 @@
 import Link from 'next/link'
 import { getUser } from '@/lib/dal'
 import { db } from '@/lib/db'
+import { rotuloDoPlano, saldoDeContratos } from '@/lib/planos'
+import { TIPOS_CONTRATO } from '@/lib/contratos/tipos'
 
-const PLAN_LIMITS: Record<string, number> = {
-  FREE: 0,
-  AVULSO: 1,
-  MENSAL: 10,
-  PROFISSIONAL: Infinity,
-}
-
-const TIPO_LABELS: Record<string, string> = {
-  'prestacao-servicos': 'Prestação de Serviços',
-  'confidencialidade': 'NDA',
-  'parceria-comercial': 'Parceria Comercial',
-  'locacao-comercial': 'Locação Comercial',
-  'compra-venda': 'Compra e Venda',
-  'contrato-trabalho': 'Trabalho',
-  'permuta': 'Permuta',
-  'representacao-comercial': 'Representação Comercial',
-  'influencer-marketing': 'Influencer',
-  'desenvolvimento-software': 'Desenvolvimento Software',
-  'cessao-direitos-autorais': 'Direitos Autorais',
-  'coaching-mentoria': 'Coaching',
-  'locacao-residencial': 'Locação Residencial',
-  'comodato': 'Comodato',
-  'empreitada-reforma': 'Empreitada',
-  'licenca-software': 'Licença Software',
-}
+const NOME_DO_TIPO = new Map(TIPOS_CONTRATO.map((t) => [t.id, t.nome]))
 
 export default async function DashboardPage() {
   const user = await getUser()
@@ -38,8 +16,7 @@ export default async function DashboardPage() {
     take: 20,
   })
 
-  const limite = PLAN_LIMITS[user.plan] ?? 0
-  const percentualUso = limite === Infinity ? 0 : limite === 0 ? 100 : (user.contractsUsed / limite) * 100
+  const saldo = saldoDeContratos(user.plan, user.contractsUsed, user.bonusContracts)
 
   return (
     <div>
@@ -53,28 +30,32 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white border border-[#d4c9b8] rounded-xl p-5">
           <div className="text-sm text-gray-500 mb-1">Contratos gerados</div>
-          <div className="text-3xl font-bold text-[#0e0e0e]">{user.contractsUsed}</div>
-          {limite !== Infinity && (
+          <div className="text-3xl font-bold text-[#0e0e0e]">{saldo.usados}</div>
+          {saldo.ilimitado ? (
+            <div className="text-xs text-[#c9a84c] mt-1">Ilimitado ✓</div>
+          ) : (
             <>
               <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-[#c9a84c] rounded-full transition-all"
-                  style={{ width: `${Math.min(percentualUso, 100)}%` }}
+                  style={{ width: `${saldo.percentualUso}%` }}
                 />
               </div>
               <div className="text-xs text-gray-400 mt-1">
-                {user.contractsUsed} de {limite} contratos
+                {saldo.usados} de {saldo.capacidadeFormatada} contratos
               </div>
+              {saldo.bonus > 0 && (
+                <div className="text-xs text-[#c9a84c] mt-0.5">
+                  Inclui {saldo.bonus} {saldo.bonus === 1 ? 'contrato bônus' : 'contratos bônus'}
+                </div>
+              )}
             </>
-          )}
-          {limite === Infinity && (
-            <div className="text-xs text-[#c9a84c] mt-1">Ilimitado ✓</div>
           )}
         </div>
 
         <div className="bg-white border border-[#d4c9b8] rounded-xl p-5">
           <div className="text-sm text-gray-500 mb-1">Seu plano</div>
-          <div className="text-2xl font-bold text-[#0e0e0e] capitalize">{user.plan.toLowerCase()}</div>
+          <div className="text-2xl font-bold text-[#0e0e0e]">{rotuloDoPlano(user.plan)}</div>
           <Link href="/assinatura" className="text-xs text-[#c9a84c] hover:underline mt-1 block">
             {user.plan === 'FREE' ? 'Fazer upgrade →' : 'Gerenciar plano →'}
           </Link>
@@ -82,7 +63,7 @@ export default async function DashboardPage() {
 
         <div className="bg-white border border-[#d4c9b8] rounded-xl p-5">
           <div className="text-sm text-gray-500 mb-1">Novo contrato</div>
-          <div className="text-sm text-gray-600 mb-3">Gere um contrato em 30 segundos</div>
+          <div className="text-sm text-gray-600 mb-3">Gere um contrato em segundos</div>
           <Link
             href="/gerar"
             className="inline-block bg-[#c9a84c] hover:bg-[#b8963e] text-black font-semibold text-sm px-4 py-2 rounded-lg transition-colors"
@@ -92,12 +73,18 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {user.plan === 'FREE' && (
+      {saldo.restantes === 0 && !saldo.ilimitado && (
         <div className="bg-[#c9a84c]/10 border border-[#c9a84c]/30 rounded-xl p-5 mb-8 flex flex-col md:flex-row items-start md:items-center gap-4">
           <div className="flex-1">
-            <div className="font-semibold text-[#0e0e0e]">Libere o poder do ContratoIA</div>
+            <div className="font-semibold text-[#0e0e0e]">
+              {saldo.capacidade === 0
+                ? 'Libere o poder do ContratoIA'
+                : 'Seus contratos acabaram'}
+            </div>
             <div className="text-sm text-gray-600 mt-1">
-              Você está no plano gratuito. Faça upgrade para gerar contratos com IA.
+              {saldo.capacidade === 0
+                ? 'Você está no plano gratuito. Escolha um plano para gerar contratos com IA.'
+                : 'Você usou todos os contratos do seu plano. Faça upgrade para continuar gerando.'}
             </div>
           </div>
           <Link
@@ -122,7 +109,7 @@ export default async function DashboardPage() {
             <div className="text-4xl mb-3">📄</div>
             <div className="text-gray-600 font-medium">Nenhum contrato ainda</div>
             <div className="text-gray-400 text-sm mt-1 mb-5">
-              Gere seu primeiro contrato com IA em 30 segundos
+              Gere seu primeiro contrato com IA em segundos
             </div>
             <Link
               href="/gerar"
@@ -141,7 +128,7 @@ export default async function DashboardPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-[#0e0e0e] text-sm truncate">{contrato.title}</div>
                   <div className="text-xs text-gray-400 mt-0.5">
-                    {TIPO_LABELS[contrato.type] ?? contrato.type} ·{' '}
+                    {NOME_DO_TIPO.get(contrato.type) ?? contrato.type} ·{' '}
                     {new Date(contrato.createdAt).toLocaleDateString('pt-BR')}
                   </div>
                 </div>

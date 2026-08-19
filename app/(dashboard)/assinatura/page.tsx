@@ -1,42 +1,17 @@
 'use client'
 
 import { useState } from 'react'
+import { PLANOS_A_VENDA, precoEmReais } from '@/lib/planos'
 
-const PLANOS = [
-  {
-    id: 'AVULSO',
-    nome: 'Avulso',
-    preco: 29,
-    periodo: 'por contrato',
-    descricao: '1 contrato, sem mensalidade',
-    recursos: ['1 contrato gerado por IA', 'Export PDF + Word', 'Histórico 30 dias', 'Suporte por email'],
-    destaque: false,
-  },
-  {
-    id: 'MENSAL',
-    nome: 'Mensal',
-    preco: 47,
-    periodo: 'por mês',
-    descricao: '10 contratos por mês',
-    recursos: ['10 contratos/mês', 'Export PDF + Word', 'Histórico completo', 'Suporte por email'],
-    destaque: true,
-  },
-  {
-    id: 'PROFISSIONAL',
-    nome: 'Profissional',
-    preco: 197,
-    periodo: 'por mês',
-    descricao: 'Para uso intenso e empresas',
-    recursos: ['Contratos ilimitados', 'Export PDF + Word', 'Histórico completo', 'Suporte WhatsApp prioritário', 'Logotipo personalizado'],
-    destaque: false,
-  },
-]
+const EMAIL_SUPORTE = 'empresa.v3app@gmail.com'
 
 export default function AssinaturaPage() {
   const [loading, setLoading] = useState<string | null>(null)
+  const [erro, setErro] = useState<string | null>(null)
 
   async function handleComprar(planoId: string) {
     setLoading(planoId)
+    setErro(null)
     try {
       const res = await fetch('/api/pagamento/preferencia', {
         method: 'POST',
@@ -47,10 +22,10 @@ export default function AssinaturaPage() {
       if (json.checkoutUrl) {
         window.location.href = json.checkoutUrl
       } else {
-        alert(`Erro: ${json.error ?? 'URL de checkout não retornada'}`)
+        setErro(json.error ?? 'Não foi possível abrir o pagamento. Tente novamente.')
       }
-    } catch (err) {
-      alert(`Erro ao processar pagamento: ${err}`)
+    } catch {
+      setErro('Falha de conexão ao abrir o pagamento. Tente novamente.')
     } finally {
       setLoading(null)
     }
@@ -63,12 +38,18 @@ export default function AssinaturaPage() {
         <p className="text-gray-600 mt-2">
           Proteja seu trabalho com contratos jurídicos gerados por IA.
           <br />
-          Aceito: PIX, cartão de crédito (até 12x) e boleto.
+          Pagamento com cartão de crédito.
         </p>
       </div>
 
+      {erro && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm text-center">
+          {erro}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {PLANOS.map((plano) => (
+        {PLANOS_A_VENDA.map((plano) => (
           <div
             key={plano.id}
             className={`bg-white rounded-2xl border-2 p-6 flex flex-col transition-all ${
@@ -83,9 +64,11 @@ export default function AssinaturaPage() {
               </div>
             )}
             <div className="mb-5">
-              <h2 className="text-lg font-bold text-[#0e0e0e]">{plano.nome}</h2>
+              <h2 className="text-lg font-bold text-[#0e0e0e]">{plano.rotulo}</h2>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-[#0e0e0e]">R${plano.preco}</span>
+                <span className="text-3xl font-bold text-[#0e0e0e]">
+                  R${precoEmReais(plano.id)}
+                </span>
                 <span className="text-sm text-gray-500">/{plano.periodo}</span>
               </div>
               <p className="text-xs text-gray-500 mt-1">{plano.descricao}</p>
@@ -109,18 +92,18 @@ export default function AssinaturaPage() {
                   : 'bg-[#0e0e0e] hover:bg-[#1a1a1a] text-white'
               } disabled:opacity-50`}
             >
-              {loading === plano.id ? 'Aguarde...' : `Assinar ${plano.nome}`}
+              {loading === plano.id ? 'Aguarde...' : `Assinar ${plano.rotulo}`}
             </button>
           </div>
         ))}
       </div>
 
       <div className="mt-8 text-center text-sm text-gray-500">
-        <p>💳 Pagamento seguro via Mercado Pago · Cancele quando quiser</p>
+        <p>💳 Pagamento seguro via Stripe · Cancele quando quiser</p>
         <p className="mt-1">
           Dúvidas?{' '}
-          <a href="mailto:suporte@contratoIA.com.br" className="text-[#c9a84c] hover:underline">
-            suporte@contratoIA.com.br
+          <a href={`mailto:${EMAIL_SUPORTE}`} className="text-[#c9a84c] hover:underline">
+            {EMAIL_SUPORTE}
           </a>
         </p>
       </div>
