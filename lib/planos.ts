@@ -8,7 +8,10 @@
  * Sem 'server-only': a tela de assinatura é client component e consome daqui.
  */
 
-export type Plano = 'FREE' | 'AVULSO' | 'MENSAL' | 'PROFISSIONAL'
+/** Tupla const: serve de enum para o zod e casa com o enum Plan do Prisma. */
+export const IDS_PLANOS = ['FREE', 'AVULSO', 'MENSAL', 'PROFISSIONAL'] as const
+
+export type Plano = (typeof IDS_PLANOS)[number]
 
 export type DadosPlano = {
   rotulo: string

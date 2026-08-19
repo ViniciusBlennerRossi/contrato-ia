@@ -3,10 +3,15 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { TIPOS_CONTRATO } from '@/lib/contratos/tipos'
+import { imprimirContrato } from '@/lib/imprimirContrato'
 
 type Contrato = { id: string; titulo: string; conteudo: string }
+type EstadoSalvamento = 'limpo' | 'salvando' | 'salvo' | 'erro'
 
 const FORMAS_PAGAMENTO = ['PIX', 'Boleto', 'TED/DOC', 'Cartão de Crédito', 'Dinheiro', 'À combinar']
+
+const CLASSE_CAMPO =
+  'w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors'
 
 export default function GerarPage() {
   const [tipoSelecionado, setTipoSelecionado] = useState(TIPOS_CONTRATO[0].id)
@@ -14,6 +19,7 @@ export default function GerarPage() {
   const [contrato, setContrato] = useState<Contrato | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [copiado, setCopiado] = useState(false)
+  const [salvamento, setSalvamento] = useState<EstadoSalvamento>('limpo')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -47,10 +53,29 @@ export default function GerarPage() {
       }
 
       setContrato(json.contrato)
+      setSalvamento('limpo')
     } catch {
       setErro('Falha de conexão. Tente novamente.')
     } finally {
       setCarregando(false)
+    }
+  }
+
+  /** Grava a edição no banco. Sem isso o texto ajustado se perdia ao sair da tela. */
+  async function salvarEdicao(atual: Contrato): Promise<boolean> {
+    setSalvamento('salvando')
+    try {
+      const res = await fetch(`/api/contratos/${atual.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: atual.conteudo }),
+      })
+      if (!res.ok) throw new Error()
+      setSalvamento('salvo')
+      return true
+    } catch {
+      setSalvamento('erro')
+      return false
     }
   }
 
@@ -63,26 +88,37 @@ export default function GerarPage() {
 
   function imprimir() {
     if (!contrato) return
-    const win = window.open('', '_blank')!
-    win.document.write(`
-      <html><head><title>${contrato.titulo}</title>
-      <style>body{font-family:Georgia,serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.8;font-size:14px}
-      h1{font-size:18px;text-align:center;margin-bottom:24px}
-      pre{white-space:pre-wrap;font-family:inherit}</style></head>
-      <body><pre>${contrato.conteudo}</pre></body></html>
-    `)
-    win.document.close()
-    win.print()
+    const abriu = imprimirContrato(contrato.titulo, contrato.conteudo)
+    if (!abriu) {
+      setErro('Seu navegador bloqueou a janela de impressão. Libere o pop-up e tente de novo.')
+    }
+  }
+
+  async function baixarWord() {
+    if (!contrato) return
+    // Salva antes de baixar, senão o arquivo sairia sem as edições da tela.
+    if (salvamento !== 'salvo' && !(await salvarEdicao(contrato))) {
+      setErro('Não foi possível salvar suas edições antes de gerar o Word. Tente novamente.')
+      return
+    }
+    window.location.href = `/api/contratos/${contrato.id}/docx`
   }
 
   const tipoAtual = TIPOS_CONTRATO.find((t) => t.id === tipoSelecionado)
+
+  const avisoSalvamento = {
+    limpo: 'Clique no texto para editar',
+    salvando: 'Salvando…',
+    salvo: 'Edições salvas ✓',
+    erro: 'Não foi possível salvar. Tente editar de novo.',
+  }[salvamento]
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-[#0e0e0e]">⚡ Gerar Contrato com IA</h1>
         <p className="text-gray-600 mt-1 text-sm">
-          Preencha os dados abaixo e receba seu contrato em 30 segundos
+          Preencha os dados abaixo e receba seu contrato em segundos
         </p>
       </div>
 
@@ -107,11 +143,7 @@ export default function GerarPage() {
                 </button>
               ))}
             </div>
-            {tipoAtual && (
-              <p className="mt-3 text-xs text-gray-500">
-                ℹ️ {tipoAtual.descricao}
-              </p>
-            )}
+            {tipoAtual && <p className="mt-3 text-xs text-gray-500">ℹ️ {tipoAtual.descricao}</p>}
           </div>
 
           <div className="bg-white border border-[#d4c9b8] rounded-xl p-6">
@@ -121,40 +153,30 @@ export default function GerarPage() {
                 <label className="block text-sm text-gray-600 mb-1.5">
                   Contratante (quem contrata)
                 </label>
-                <input
-                  name="contratante"
-                  required
-                  placeholder="Nome ou empresa"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
-                />
+                <input name="contratante" required maxLength={200} placeholder="Nome ou empresa" className={CLASSE_CAMPO} />
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1.5">CPF/CNPJ do Contratante</label>
                 <input
                   name="cpfCnpjContratante"
                   required
+                  maxLength={30}
                   placeholder="000.000.000-00 ou 00.000.000/0001-00"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  className={CLASSE_CAMPO}
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1.5">
-                  Contratado (quem presta)
-                </label>
-                <input
-                  name="contratado"
-                  required
-                  placeholder="Nome ou empresa"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
-                />
+                <label className="block text-sm text-gray-600 mb-1.5">Contratado (quem presta)</label>
+                <input name="contratado" required maxLength={200} placeholder="Nome ou empresa" className={CLASSE_CAMPO} />
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1.5">CPF/CNPJ do Contratado</label>
                 <input
                   name="cpfCnpjContratado"
                   required
+                  maxLength={30}
                   placeholder="000.000.000-00 ou 00.000.000/0001-00"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  className={CLASSE_CAMPO}
                 />
               </div>
             </div>
@@ -165,43 +187,28 @@ export default function GerarPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm text-gray-600 mb-1.5">Valor (R$)</label>
-                <input
-                  name="valor"
-                  placeholder="Ex: 5.000,00"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
-                />
+                <input name="valor" maxLength={40} placeholder="Ex: 5.000,00" className={CLASSE_CAMPO} />
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1.5">Duração / Prazo</label>
                 <input
                   name="duracao"
+                  maxLength={80}
                   placeholder="Ex: 6 meses, 12 meses, indeterminado"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  className={CLASSE_CAMPO}
                 />
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1.5">Cidade</label>
-                <input
-                  name="cidade"
-                  placeholder="São Paulo"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
-                />
+                <input name="cidade" maxLength={80} placeholder="São Paulo" className={CLASSE_CAMPO} />
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1.5">Estado</label>
-                <input
-                  name="estado"
-                  placeholder="SP"
-                  maxLength={2}
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors"
-                />
+                <input name="estado" placeholder="SP" maxLength={2} className={CLASSE_CAMPO} />
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-sm text-gray-600 mb-1.5">Forma de Pagamento</label>
-                <select
-                  name="formaPagamento"
-                  className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors bg-white"
-                >
+                <select name="formaPagamento" className={`${CLASSE_CAMPO} bg-white`}>
                   {FORMAS_PAGAMENTO.map((f) => (
                     <option key={f}>{f}</option>
                   ))}
@@ -218,8 +225,9 @@ export default function GerarPage() {
                 name="descricao"
                 required
                 rows={4}
+                maxLength={2000}
                 placeholder="Descreva detalhadamente o que será contratado, entregue ou realizado..."
-                className="w-full border border-[#d4c9b8] rounded-lg px-3 py-2.5 text-sm text-[#0e0e0e] focus:outline-none focus:border-[#c9a84c] transition-colors resize-y"
+                className={`${CLASSE_CAMPO} resize-y`}
               />
             </div>
           </div>
@@ -258,18 +266,36 @@ export default function GerarPage() {
         </form>
       ) : (
         <div>
+          {erro && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+              {erro}
+            </div>
+          )}
+
           <div className="bg-white border border-[#d4c9b8] rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-[#d4c9b8] bg-[#f9f6f0]">
-              <div>
-                <h2 className="font-semibold text-[#0e0e0e] text-sm">{contrato.titulo}</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Contrato gerado com IA • Clique no texto para editar</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border-b border-[#d4c9b8] bg-[#f9f6f0]">
+              <div className="min-w-0">
+                <h2 className="font-semibold text-[#0e0e0e] text-sm truncate">{contrato.titulo}</h2>
+                <p
+                  className={`text-xs mt-0.5 ${
+                    salvamento === 'erro' ? 'text-red-500' : 'text-gray-500'
+                  }`}
+                >
+                  {avisoSalvamento}
+                </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0">
                 <button
                   onClick={copiar}
                   className="flex items-center gap-1.5 text-xs bg-[#0e0e0e] text-white px-3 py-1.5 rounded-lg hover:bg-[#1a1a1a] transition-colors"
                 >
                   {copiado ? '✓ Copiado' : '📋 Copiar'}
+                </button>
+                <button
+                  onClick={baixarWord}
+                  className="flex items-center gap-1.5 text-xs border border-[#0e0e0e] text-[#0e0e0e] px-3 py-1.5 rounded-lg hover:bg-[#0e0e0e] hover:text-white transition-colors"
+                >
+                  📄 Word
                 </button>
                 <button
                   onClick={imprimir}
@@ -282,7 +308,11 @@ export default function GerarPage() {
             <div className="p-2">
               <textarea
                 value={contrato.conteudo}
-                onChange={(e) => setContrato({ ...contrato, conteudo: e.target.value })}
+                onChange={(e) => {
+                  setContrato({ ...contrato, conteudo: e.target.value })
+                  setSalvamento('limpo')
+                }}
+                onBlur={() => salvarEdicao(contrato)}
                 className="w-full min-h-[600px] p-4 font-serif text-sm text-[#0e0e0e] leading-relaxed border-0 outline-none resize-y bg-white"
                 spellCheck={false}
               />
@@ -291,7 +321,10 @@ export default function GerarPage() {
 
           <div className="mt-4 flex gap-3">
             <button
-              onClick={() => setContrato(null)}
+              onClick={() => {
+                setContrato(null)
+                setErro(null)
+              }}
               className="flex-1 border border-[#d4c9b8] text-gray-600 hover:border-[#c9a84c] py-2.5 rounded-xl text-sm transition-colors"
             >
               ← Gerar outro contrato
