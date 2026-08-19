@@ -38,6 +38,9 @@ INSTRUÇÕES OBRIGATÓRIAS:
 - O contrato deve ser pronto para uso real
 - Não inclua explicações externas ao texto do contrato
 - Finalize com espaço para assinaturas das partes e 2 testemunhas
+- NÃO use marcação Markdown: nada de asteriscos (**), cerquilhas (#) ou linhas de traços (---)
+- Títulos e nomes de cláusula em MAIÚSCULAS, como em contrato impresso
+- Texto puro, pronto para imprimir e assinar
 
 GERE APENAS O TEXTO DO CONTRATO:
 `

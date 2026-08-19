@@ -33,11 +33,26 @@ function resolverEndpoints(url: string) {
   return { openai: `${base}/v1/chat/completions`, ollama: `${base}/api/chat` }
 }
 
-/** Rede de segurança: se algum raciocínio escapar, não vai para dentro do contrato. */
-function limparRaciocinio(texto: string): string {
+/**
+ * Contrato é documento para imprimir e assinar: nenhum modelo obedece 100% das
+ * vezes à instrução de não usar Markdown, então a saída é higienizada aqui.
+ * Remove também qualquer raciocínio que escape para o corpo do texto.
+ */
+function limparSaida(texto: string): string {
   return texto
+    // raciocínio vazado
     .replace(/<think>[\s\S]*?<\/think>/gi, '')
     .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
+    // títulos: "### CLÁUSULA 1" -> "CLÁUSULA 1"
+    .replace(/^[ \t]*#{1,6}[ \t]*/gm, '')
+    // separador Markdown (--- / ***). A faixa é curta de propósito: linha longa
+    // de traços ou de sublinhados é campo de assinatura, não separador.
+    .replace(/^[ \t]*(?:-{3,10}|\*{3,10})[ \t]*$/gm, '')
+    // negrito e itálico, preservando o texto interno
+    .replace(/\*\*([^*\n]+?)\*\*/g, '$1')
+    .replace(/(?<![*\w])\*([^*\n]+?)\*(?![*\w])/g, '$1')
+    // sobra de linhas em branco depois das remoções
+    .replace(/\n{3,}/g, '\n\n')
     .trim()
 }
 
@@ -111,7 +126,7 @@ async function gerarLocal(prompt: string): Promise<string> {
 
     if (resposta.ok) {
       const dados = await resposta.json()
-      const texto = limparRaciocinio(dados?.message?.content ?? '')
+      const texto = limparSaida(dados?.message?.content ?? '')
       if (texto) return texto
       throw new LLMError(
         dados?.done_reason === 'length'
@@ -130,7 +145,7 @@ async function gerarLocal(prompt: string): Promise<string> {
 
   if (resposta.ok) {
     const dados = await resposta.json()
-    const texto = limparRaciocinio(dados?.choices?.[0]?.message?.content ?? '')
+    const texto = limparSaida(dados?.choices?.[0]?.message?.content ?? '')
     if (texto) return texto
     throw new LLMError('Resposta vazia da LLM local')
   }
@@ -152,7 +167,7 @@ async function gerarGroq(prompt: string): Promise<string> {
 
   const texto = completion.choices[0]?.message?.content
   if (!texto) throw new LLMError('Resposta vazia do Groq')
-  return limparRaciocinio(texto)
+  return limparSaida(texto)
 }
 
 export async function generateContract(prompt: string): Promise<string> {
