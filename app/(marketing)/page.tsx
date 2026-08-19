@@ -105,7 +105,7 @@ export default function LandingPage() {
           <h1 className="font-[family-name:var(--font-cormorant)] text-5xl md:text-7xl lg:text-8xl font-semibold leading-tight mb-6">
             Contratos jurídicos
             <br />
-            <em className="text-[#c8a84b] not-italic">em 30 segundos.</em>
+            <em className="text-[#c8a84b] not-italic">em segundos.</em>
           </h1>
 
           <p className="text-gray-400 text-lg md:text-xl max-w-2xl mb-10 leading-relaxed">
@@ -197,7 +197,7 @@ export default function LandingPage() {
               <tbody>
                 {[
                   ['Custo', 'R$300 – R$800', 'R$29 – R$47'],
-                  ['Tempo', '3 a 10 dias', '30 segundos'],
+                  ['Tempo', '3 a 10 dias', 'Segundos'],
                   ['Disponibilidade', 'Horário comercial', '24h por dia'],
                   ['Revisões', 'R$150+ por revisão', 'Ilimitadas'],
                   ['Formato', 'PDF (às vezes)', 'PDF + Word'],
