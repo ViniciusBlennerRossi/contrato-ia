@@ -1,0 +1,2 @@
+# Mantém a pasta no repositório: o Dockerfile faz COPY de /app/public e o
+# git não versiona diretório vazio.
