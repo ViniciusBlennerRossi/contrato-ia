@@ -144,7 +144,7 @@ async function gerarGroq(prompt: string): Promise<string> {
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
   const completion = await groq.chat.completions.create({
-    model: process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile',
+    model: process.env.GROQ_MODEL ?? 'openai/gpt-oss-120b',
     messages: [{ role: 'user', content: prompt }],
     temperature: TEMPERATURE,
     max_tokens: MAX_TOKENS,
