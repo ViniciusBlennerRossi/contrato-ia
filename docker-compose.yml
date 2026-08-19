@@ -1,59 +1,44 @@
-# Deploy do ContratoIA na VPS, atrás do Traefik que já existe na máquina.
+# Deploy do ContratoIA na VPS, atrás do Traefik do Coolify (coolify-proxy).
 #
-#   docker compose up -d --build            (app apenas, banco externo)
-#   docker compose --profile db up -d       (app + Postgres na VPS)
+# Uso na VPS (em /home/ubuntu/apps/contratoia, com este arquivo e o .env fora
+# do repositório e o clone em ./repo):
 #
-# Ajuste TRAEFIK_NETWORK, TRAEFIK_CERTRESOLVER e APP_DOMAIN no .env antes de subir.
+#   docker compose up -d --build
+#
+# Entrypoints e certresolver seguem o padrão do coolify-proxy: http/https e
+# letsencrypt via HTTP challenge, rede externa "coolify".
 
 services:
   app:
     build:
       context: .
       args:
+        # NEXT_PUBLIC_* é embutido no bundle durante o build, não lido em runtime
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+    container_name: contratoia-web
     restart: unless-stopped
     env_file: .env
-    # permite alcançar uma LLM instalada no host (não em container):
-    # LOCAL_LLM_URL="http://host.docker.internal:11434"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    # permite alcançar uma LLM instalada no host (AI_PROVIDER=local):
+    # LOCAL_LLM_URL="http://10.0.2.1:11434"  (gateway da rede coolify)
     networks:
-      - traefik
-      - interna
+      - coolify
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik}"
+      - "traefik.docker.network=coolify"
+      # http -> redireciona para https
+      - "traefik.http.routers.contratoia-http.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.contratoia-http.entrypoints=http"
+      - "traefik.http.routers.contratoia-http.middlewares=contratoia-redirect"
+      - "traefik.http.routers.contratoia-http.service=contratoia"
+      - "traefik.http.middlewares.contratoia-redirect.redirectscheme.scheme=https"
+      # https com certificado do Let's Encrypt
       - "traefik.http.routers.contratoia.rule=Host(`${APP_DOMAIN}`)"
-      - "traefik.http.routers.contratoia.entrypoints=websecure"
+      - "traefik.http.routers.contratoia.entrypoints=https"
       - "traefik.http.routers.contratoia.tls=true"
-      - "traefik.http.routers.contratoia.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.routers.contratoia.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.contratoia.service=contratoia"
       - "traefik.http.services.contratoia.loadbalancer.server.port=3000"
 
-  # Opcional: só sobe com --profile db. Se mantiver o Supabase, ignore.
-  postgres:
-    image: postgres:17-alpine
-    profiles: ["db"]
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-contratoia}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-contratoia}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - interna
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-contratoia}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  pgdata:
-
 networks:
-  traefik:
+  coolify:
     external: true
-    name: ${TRAEFIK_NETWORK:-traefik}
-  interna:
-    driver: bridge

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
-import { stripe, PLANOS_STRIPE } from '@/lib/stripe'
+import { getStripe, PLANOS_STRIPE } from '@/lib/stripe'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://contrato.v3app.com.br'
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         }
 
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const checkoutSession = await getStripe().checkout.sessions.create({
       mode: dadosPlano.modo,
       line_items: [lineItem],
       customer_email: user.email,

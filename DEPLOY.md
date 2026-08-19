@@ -1,69 +1,63 @@
-# Deploy na VPS (Oracle Cloud + Coolify)
+# Deploy na VPS (Oracle Cloud + Traefik do Coolify)
 
 ## O ambiente
 
 | item | valor |
 |---|---|
 | Host | `163.176.248.144` — Ubuntu 24.04, **aarch64**, 4 vCPU, 23 GB RAM |
-| Orquestrador | Coolify 4.1.2 (proxy = `coolify-proxy`, Traefik v3.6) |
-| Rede docker | `coolify` — subnet `10.0.2.0/24`, gateway **`10.0.2.1`** |
-| LLM | Ollama no host (systemd), `gemma4:e2b` e `gemma4-e2b-fast:latest` |
+| Proxy | `coolify-proxy` (Traefik v3.6) — entrypoints `http`/`https`, certresolver `letsencrypt` |
+| Rede docker | `coolify` — subnet `10.0.2.0/24`, gateway `10.0.2.1` |
+| Domínio | `contrato.v3app.com.br` → já resolve para a VPS |
 | Banco | Supabase (projeto `vqyiqosjxluoggvxtzuh`) |
+| LLM | Groq (nuvem). Ollama com `gemma4:e2b` existe no host, hoje sem uso |
 
-`contrato.v3app.com.br` já resolve para essa VPS. O Traefik responde
-**503 "no available server"** porque ainda não existe aplicação registrada para
-esse domínio — criar a app no Coolify é o que resolve.
+O usuário `ubuntu` **não** está no grupo `docker`: todo comando docker exige `sudo`.
 
-## 1. Liberar o Ollama para os containers
+## Layout na VPS
 
-O Ollama escuta só em `127.0.0.1:11434`, então nenhum container o alcança.
-A máquina já usa esse mesmo padrão para o hermes na 8090.
-
-```bash
-sudo systemctl edit ollama          # cria o override
-# no editor:
-[Service]
-Environment="OLLAMA_HOST=0.0.0.0:11434"
-
-sudo systemctl daemon-reload && sudo systemctl restart ollama
-
-# libera só a rede do coolify (INPUT tem policy DROP, o mundo continua fora)
-sudo iptables -I INPUT -s 10.0.2.0/24 -p tcp --dport 11434 -j ACCEPT
-sudo netfilter-persistent save
+```
+/home/ubuntu/apps/contratoia/
+├── repo/                 # git clone do projeto
+├── .env                  # segredos (chmod 600, fora do repositório)
+└── docker-compose.yml    # build context ./repo
 ```
 
-Conferir de dentro de um container:
+O app **não** é gerenciado pelo painel do Coolify — sobe como container próprio,
+e o Traefik do Coolify o roteia pelas labels. Para colocá-lo sob o painel depois,
+crie a aplicação no Coolify (New Resource → Public Repository, build pack
+Dockerfile, porta 3000, domínio `contrato.v3app.com.br`) e derrube este container.
+
+## Subir / atualizar
 
 ```bash
-sudo docker run --rm --network coolify curlimages/curl -s -m5 http://10.0.2.1:11434/api/tags
+cd /home/ubuntu/apps/contratoia
+git -C repo pull
+sudo docker compose up -d --build
+sudo docker compose logs -f app
 ```
 
-## 2. Criar a aplicação no Coolify
+## Variáveis
 
-Painel em `http://163.176.248.144:8000` → **New Resource → Application → Public Repository**
+Ficam em `/home/ubuntu/apps/contratoia/.env`. Veja `.env.example` para a lista.
+Duas armadilhas:
 
-- Repositório: `https://github.com/ViniciusBlennerRossi/contrato-ia`, branch `master`
-- Build Pack: **Dockerfile**
-- Domínio: `https://contrato.v3app.com.br`
-- Porta exposta: `3000`
+- `NEXT_PUBLIC_APP_URL` é build arg (embutida no bundle). Mudou o domínio?
+  Precisa **rebuild**, não basta reiniciar.
+- `GMAIL_USER` / `GMAIL_APP_PASSWORD` ainda estão só na Vercel. Sem elas o
+  "esqueci minha senha" não envia e-mail.
 
-O Coolify cria a rota no Traefik e emite o certificado Let's Encrypt sozinho —
-é isso que derruba o 503 e o erro de certificado.
+## Depois de trocar de domínio (contratoia. → contrato.)
 
-## 3. Variáveis de ambiente
+- **Google Cloud Console** → OAuth Client → Authorized redirect URIs:
+  `https://contrato.v3app.com.br/api/auth/google/callback`
+- **Stripe** → Webhooks: `https://contrato.v3app.com.br/api/pagamento/webhook`
 
-Cole no painel (aba Environment Variables) o conteúdo do `.env.example` com os
-valores reais. Atenção:
+## Trocar a LLM
 
-- `NEXT_PUBLIC_APP_URL` precisa estar marcada como **Build Variable** — variável
-  `NEXT_PUBLIC_*` é embutida no bundle durante o build, não lida em runtime.
-- `GMAIL_USER` / `GMAIL_APP_PASSWORD` estão hoje só na Vercel; sem elas o
-  "esqueci minha senha" quebra.
-- `SESSION_SECRET` pode ser reaproveitado da Vercel (senão todas as sessões ativas caem).
-
-## 4. Apontar para o Gemma
+Sem rebuild — basta editar o `.env` e `sudo docker compose up -d`:
 
 ```env
+# Gemma na própria VPS (Ollama no host)
 AI_PROVIDER="local"
 LOCAL_LLM_API="ollama"
 LOCAL_LLM_URL="http://10.0.2.1:11434"
@@ -72,26 +66,23 @@ LOCAL_LLM_TIMEOUT_MS="600000"
 AI_FALLBACK_GROQ="true"
 ```
 
-Medido na máquina: **~14 tokens/s**, ou seja **3 a 4 minutos por contrato**.
-Dois detalhes que valem lembrar:
+Antes disso o Ollama precisa aceitar conexão dos containers — hoje escuta só em
+`127.0.0.1`:
 
-- O gemma4 tem *thinking*. Sem `think:false` ele gasta a cota de tokens
-  raciocinando e devolve contrato vazio — [lib/llm.ts](lib/llm.ts) já manda
-  `think:false` e ainda limpa `<think>` da saída por segurança.
-- `OLLAMA_NUM_PARALLEL=1` no systemd: as gerações são enfileiradas, uma por vez.
-  Com 3-4 min cada, dois usuários simultâneos significam ~8 min para o segundo.
+```bash
+sudo systemctl edit ollama     # [Service] / Environment="OLLAMA_HOST=0.0.0.0:11434"
+sudo systemctl daemon-reload && sudo systemctl restart ollama
+sudo iptables -I INPUT -s 10.0.2.0/24 -p tcp --dport 11434 -j ACCEPT
+sudo netfilter-persistent save
+```
 
-## 5. Depois de subir
+Medido na máquina: **~14 tokens/s**, ou **3 a 4 min por contrato**, com
+`OLLAMA_NUM_PARALLEL=1` (um de cada vez). O gemma4 tem *thinking*: sem
+`think:false` devolve contrato vazio — [lib/llm.ts](lib/llm.ts) já cuida disso.
 
-- Stripe: o webhook continua em `https://contrato.v3app.com.br/api/pagamento/webhook`
-  (domínio não muda). Confira se os eventos chegam com 200.
-- Google OAuth: mesmo domínio, nada a alterar.
-- Vercel: só desative o projeto depois que a VPS estiver estável.
-
-## Alternativa sem Coolify
-
-O [docker-compose.yml](docker-compose.yml) na raiz faz o mesmo deploy à mão
-(labels do Traefik + Postgres opcional), caso um dia a app saia do Coolify.
+Para a API da OpenAI, o mesmo cliente serve: `LOCAL_LLM_API="openai"`,
+`LOCAL_LLM_URL="https://api.openai.com/v1"` e a chave em `LOCAL_LLM_API_KEY`
+(modelos novos exigem `max_completion_tokens` — ajuste necessário em lib/llm.ts).
 
 ## Migrar o banco do Supabase para a VPS (opcional)
 
