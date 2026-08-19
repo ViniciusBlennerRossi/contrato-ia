@@ -23,8 +23,8 @@ export default function PrivacidadePage() {
             <p>
               O ContratoIA é um serviço de geração de contratos jurídicos por inteligência artificial,
               operado por V3App Tecnologia, com site em{' '}
-              <a href="https://contratoia.v3app.com.br" className="text-[#c9a84c] hover:underline">
-                contratoia.v3app.com.br
+              <a href="https://contrato.v3app.com.br" className="text-[#c9a84c] hover:underline">
+                contrato.v3app.com.br
               </a>
               . Este documento explica quais dados coletamos, como os utilizamos e quais são seus direitos.
             </p>

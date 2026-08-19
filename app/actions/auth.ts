@@ -111,7 +111,7 @@ export async function solicitarRedefinicao(state: AuthState, formData: FormData)
 
   await db.verificationToken.create({ data: { identifier: email, token, expires } })
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://contratoia.v3app.com.br'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://contrato.v3app.com.br'
   const link = `${appUrl}/redefinir-senha?token=${token}`
 
   const transporter = nodemailer.createTransport({

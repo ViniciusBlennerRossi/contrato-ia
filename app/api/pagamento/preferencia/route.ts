@@ -3,7 +3,7 @@ import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
 import { stripe, PLANOS_STRIPE } from '@/lib/stripe'
 
-const APP_URL = 'https://contratoia.v3app.com.br'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://contrato.v3app.com.br'
 
 export async function POST(request: NextRequest) {
   const session = await getSession()

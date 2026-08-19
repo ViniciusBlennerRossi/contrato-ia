@@ -1,0 +1,59 @@
+# Deploy do ContratoIA na VPS, atrás do Traefik que já existe na máquina.
+#
+#   docker compose up -d --build            (app apenas, banco externo)
+#   docker compose --profile db up -d       (app + Postgres na VPS)
+#
+# Ajuste TRAEFIK_NETWORK, TRAEFIK_CERTRESOLVER e APP_DOMAIN no .env antes de subir.
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+    restart: unless-stopped
+    env_file: .env
+    # permite alcançar uma LLM instalada no host (não em container):
+    # LOCAL_LLM_URL="http://host.docker.internal:11434"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - traefik
+      - interna
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik}"
+      - "traefik.http.routers.contratoia.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.contratoia.entrypoints=websecure"
+      - "traefik.http.routers.contratoia.tls=true"
+      - "traefik.http.routers.contratoia.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.services.contratoia.loadbalancer.server.port=3000"
+
+  # Opcional: só sobe com --profile db. Se mantiver o Supabase, ignore.
+  postgres:
+    image: postgres:17-alpine
+    profiles: ["db"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-contratoia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-contratoia}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - interna
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-contratoia}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik}
+  interna:
+    driver: bridge
